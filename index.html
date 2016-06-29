@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Begin OpenTSDB</title>
+    <link rel="stylesheet" type="text/css" href="build/build.css">
+  </head>
+  <body>
+    <article>
+      <section>
+        <h1>认识 OpenTSDB</h1>
+        <h3>Bin Liu</h3>
+        <h3>2016/6/30</h3>
+      </section>
+      <section>
+        <h2>什么是TSDB</h2>
+        <ul>
+          <li>TSDB = Time series database</li>
+          <li>存储时序列（time-series）数据</li>
+          <li>以时间建立索引</li>
+        </ul>
+      </section>
+      <section>
+        <h2>数据特点</h2>
+        <ul>
+          <li>数据量大</li>
+          <li>结构简单</li>
+          <li>metri + timestamp + value [+ meta]</li>
+        </ul>
+      </section>
+      <section>
+        <h2>TSDB特点</h2>
+        <ul>
+          <li>时效性</li>
+          <li>顺序写</li>
+          <li>写多于读</li>
+          <li>无更新</li>
+          <li>区块（bulk）删除</li>
+        </ul>
+      </section>
+      <section>
+        <h2>TSDB特点</h2>
+        <ul>
+          <li>顺序读</li>
+          <li>读优化</li>
+        </ul>
+      </section>
+      <section>
+        <h2>存储引擎</h2>
+        <ul>
+          <li>HDFS</li>
+          <li>HBase</li>
+          <li>Cassandra</li>
+          <li>LevelDB</li>
+          <li>RRDTools</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Schemaless VS Schema</h2>
+        <ul>
+          <li>灵活</li>
+          <li>性能</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Query Language</h2>
+        <pre><code class="language-javascript">select mean(value) from 
+system.load.1
+where role='user'
+ and time >= xxx
+ and time <= yyy 
+group by dc
+
+</code></pre>
+      </section>
+      <section>
+        <h2>TSDB</h2>
+        <ul>
+          <li>InfluxDB</li>
+          <li>RRDtool（Round Robin Database Tool）</li>
+          <li>Graphite</li>
+          <li>Druid/Pinot</li>
+          <li>Prometheus</li>
+          <li>Riak TS</li>
+        </ul>
+      </section>
+      <section>
+        <h2>OpenTSDB</h2>
+        <ul>
+          <li>HBase</li>
+          <li>Tags</li>
+          <li>HTTP API</li>
+          <li>聚合计算</li>
+        </ul>
+      </section>
+      <section>
+        <h2>OpenTSDB用例（2014）</h2>
+        <ul>
+          <li><b>OVH</b>
+            <ul>
+              <li>35 nodes</li>
+              <li>100k writes/s</li>
+            </ul>
+          </li>
+          <li><b>Yahoo</b>
+            <ul>
+              <li>15 nodes</li>
+              <li>280k writes/s</li>
+            </ul>
+          </li>
+          <li><b>Arista</b>
+            <ul>
+              <li>单节点，无HDFS</li>
+              <li>5k writes/s</li>
+              <li>500G</li>
+            </ul>
+          </li>
+          <li><b>Box</b>
+            <ul>
+              <li>23 nodes</li>
+              <li>90k writes/s</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>OpenTSDB</h2><img src="http://77gaj2.com1.z0.glb.clouddn.com/2015/07/09/opentsdb/opentsdb_dataflow.jpg/zoom1">
+      </section>
+      <section>
+        <h2>Write Data（Telnet）</h2>
+        <pre><code class="language-javascript">$ telnet localhost 4242
+put sys.load.1 1436333416 23 host=web01 user=10001
+
+</code></pre>
+      </section>
+      <section>
+        <h2>Write Data（HTTP）</h2>
+        <pre><code class="language-javascript">$ curl -X POST -H "Content-Type: application/json" http://localhost:4242/api/put -d '[
+    {
+        "metric": "system.load.1",
+        "timestamp": 1467090431,
+        "value": 0.12,
+        "tags": {
+           "host": "web01",
+           "dc": "tianjin"
+        }
+    }
+]'
+
+</code></pre>
+      </section>
+      <section>
+        <h2>Read Data</h2>
+        <pre><code class="language-javascript">$ curl -s -X POST -H "Content-Type: application/json" http://localhost:4242/api/query -d '{
+    "start": 1435716527,
+    "queries": [
+        {
+            "metric": "system.load.1",
+            "aggregator": "avg",
+            "tags": {
+                "host": "*",
+                "dc": "beijing"
+            }
+        }
+    ]
+}'
+
+</code></pre>
+      </section>
+      <section>
+        <h2>OpenTSDB存储</h2>
+        <ul>
+          <li>HBase</li>
+          <li>UID</li>
+          <li>3600s/Row</li>
+          <li>行压缩</li>
+        </ul>
+      </section>
+      <section>
+        <h2>UID</h2>
+        <ul>
+          <li>metric</li>
+          <li>tagk</li>
+          <li>tagv</li>
+          <li>default: 3bytes</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Row key</h2>
+        <pre><code class="language-javascript">&lt;metric_uid&gt;&lt;timestamp&gt;&lt;tagk1&gt;&lt;tagv1&gt;[...&lt;tagkN&gt;&lt;tagvN&gt;]
+// 例：
+ \x00\x00\x01 + U\x9C\xAEP + \x00\x00\x01 + \x00\x00\x01 + \x00\x00\x02  + \x00\x00\x02
+sys.cpu.user     1436333416         host    =      web01          user     =    10001
+</code></pre>
+      </section>
+      <section>
+        <h2>Row key</h2><img src="images/opentsdb-rowkey.jpg">
+      </section>
+      <section>
+        <h2>Demo</h2>
+        <ul>
+          <li>OpenTSDB in Docker</li>
+          <li>Cloudinsight</li>
+        </ul>
+      </section>
+      <section>
+        <h2>tcollector</h2>
+        <pre><code class="language-javascript">cd ~/tcollector/
+sudo ./tcollector start
+</code></pre>
+      </section>
+      <section>
+        <h2>Running OpenTSDB</h2>
+        <pre><code class="language-javascript">docker run -d -p 4242:4242 liubin/opentsdb
+</code></pre>
+      </section>
+      <section>
+        <h2>Cloudinsight</h2>
+        <h3>http://cloudinsight.oneapm.com/</h3>
+      </section>
+      <section>
+        <h2>Dashboard</h2>
+        <ul>
+          <li>https://github.com/Ticketmaster/metrilyx-2.0</li>
+        </ul>
+      </section>
+      <section>
+        <h2>想用？</h2>
+        <ul>
+          <li>HBase运维</li>
+          <li>Tag设计</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Tag设计</h2>
+        <ul>
+          <li>docker.cpu.sys{containerid=58705}</li>
+          <li>docker.cpu.sys.58705</li>
+        </ul>
+      </section>
+      <section>
+        <h2>reference</h2>
+        <ul>
+          <li>http://www.slideshare.net/cloudera/4-opentsdb-hbasecon</li>
+          <li>http://www.slideshare.net/cloudera/operations-session-3</li>
+          <li>http://www.slideshare.net/HBaseCon/ecosystem-session-6</li>
+          <li>http://www.slideshare.net/oliverhankeln/opentsdb-metrics-for-a-distributed-world</li>
+        </ul>
+      </section>
+    </article>
+    <script src="build/build.js"></script>
+  </body>
+</html>
