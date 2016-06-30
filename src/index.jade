@@ -15,6 +15,7 @@ html
         h1 认识 OpenTSDB
         h3 Bin Liu
         h3 2016/6/30
+        h3 http://liubin.org/opentsdb-intro
 
       section
         h2 什么是TSDB
@@ -28,7 +29,7 @@ html
         ul
           li 数据量大
           li 结构简单
-          li metri + timestamp + value [+ meta]
+          li metric + timestamp + value [+ meta]
 
       section
         h2 TSDB特点
@@ -196,7 +197,6 @@ html
         h2 Demo
         ul
           li OpenTSDB in Docker
-          li Cloudinsight
 
       section
         h2 tcollector
@@ -210,10 +210,6 @@ html
         pre
           code.language-javascript.
             docker run -d -p 4242:4242 liubin/opentsdb
-
-      section
-        h2 Cloudinsight
-        h3 http://cloudinsight.oneapm.com/
 
       section
         h2 Dashboard
@@ -239,5 +235,9 @@ html
           li http://www.slideshare.net/cloudera/operations-session-3
           li http://www.slideshare.net/HBaseCon/ecosystem-session-6
           li http://www.slideshare.net/oliverhankeln/opentsdb-metrics-for-a-distributed-world
+
+      section
+        h2 Thanks
+        h3 http://liubin.org/opentsdb-intro
 
     script(src='build/build.js')

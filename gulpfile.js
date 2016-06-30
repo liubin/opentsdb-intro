@@ -17,6 +17,7 @@ var pkg = require('./package.json'),
   opn = require('opn'),
   ghpages = require('gh-pages'),
   path = require('path'),
+  pdf = require('bespoke-pdf'),
   isDist = process.argv.indexOf('serve') === -1;
 
 gulp.task('js', ['clean:js'], function() {
@@ -109,3 +110,8 @@ gulp.task('build', ['js', 'html', 'css', 'images']);
 gulp.task('serve', ['open', 'watch']);
 
 gulp.task('default', ['build']);
+
+gulp.task('pdf', ['connect'], function () {
+  return pdf(pkg.name + '.pdf')
+    .pipe(gulp.dest('dist'));
+});
